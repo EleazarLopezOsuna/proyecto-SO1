@@ -1,0 +1,83 @@
+version: "3.9"
+services:
+  endpoint_server:
+    container_name: endpoint_server
+    image: kevinmarroquin/endpoint_server:latest
+    depends_on:
+      - db
+    ports:
+      - "4000:3000"
+    networks:
+      - app-network
+  node_server_1:
+    container_name: node_server_1
+    image: kevinmarroquin/node_server:latest
+    depends_on:
+      - db
+    ports:
+      - "5000:3000"
+    networks:
+      - app-network
+  node_server_2:
+    container_name: node_server_2
+    image: kevinmarroquin/node_server:latest
+    depends_on:
+      - db
+    ports:
+      - "5001:3000"
+    networks:
+      - app-network
+  node_server_3:
+    container_name: node_server_3
+    image: kevinmarroquin/node_server:latest
+    depends_on:
+      - db
+    ports:
+      - "5002:3000"
+    networks:
+      - app-network
+  client_server:
+    container_name: client_server
+    image: kevinmarroquin/client_server:latest
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "5500:3000"
+    networks:
+      - app-network
+  db:
+    container_name: db
+    image: mysql:8.0.31
+    command: --default-authentication-plugin=mysql_native_password
+    command: --init-file /data/application/init.sql
+    volumes:
+        - ./init.sql:/data/application/init.sql
+    restart: always
+    ports:
+      - "3307:3307"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_TCP_PORT=3307
+    networks:
+      - app-network
+  frontend:
+    container_name: frontend
+    image: kevinmarroquin/frontend:latest
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+      - app-network
+  nginx:
+    container_name: load_balancer
+    image: kevinmarroquin/load_balancer:latest
+    ports:
+      - "8080:80"
+    depends_on:
+      - node_server_1
+      - node_server_2
+      - node_server_3
+networks:
+  app-network:
+    driver: bridge
